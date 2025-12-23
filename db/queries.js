@@ -15,14 +15,14 @@ async function getLocationOfAllCharacters() {
 
 
 // Get all x & y coordinate of characters in different levels using image id
-async function getCoordinatesofLevel(imageId) {
+async function getCoordinatesofLevel(image_id) {
   try {
     const { rows } = await pool.query(`
                                            SELECT location.character_name, location.x, location.y, image.id, image.name 
                                            FROM location 
                                            LEFT JOIN image    
                                            ON location.image_id = image.id 
-                                           WHERE image.id = $1`, [imageId]);
+                                           WHERE image.id = $1`, [image_id]);
     return rows 
     
   } catch (error) {
@@ -35,7 +35,7 @@ async function getCoordinatesofLevel(imageId) {
 // Get x & y of a specific character using imageId and character name
 async function getCoordinatesofACharacter(imageId, character_name) {
   try {
-    const result = { rows } = await pool.query(`
+    const result = await pool.query(`
                                            SELECT character_name, x, y, tolerance
                                            FROM location  
                                            WHERE image_id = $1
@@ -51,11 +51,93 @@ async function getCoordinatesofACharacter(imageId, character_name) {
 
 
 
+// Get a specific level using imageId
+async function getLevel(id) {
+  try {
+    const result = await pool.query('SELECT name, path FROM image WHERE id = $1', [id]);
+    return result.rows[0]
+    
+  } catch (error) {
+    throw Error('Error fetching level')
+  }
+}
 
+
+
+// Start the round
+async function startRound(startTime, image_id, session_id) {
+  try {
+    const result = await pool.query('INSERT into rounds (start_time, image_id, sessionId) VALUES ($1, $2, $3) RETURNING id', [startTime, image_id, session_id])
+    return result.rows[0].id // round_id
+  } catch (error) {
+    throw Error('Error adding start time')
+  }
+  
+}
+
+
+// Update end_time column for end of round
+async function updateEndTimeRound(end_time, round_id) {
+  try {
+    await pool.query('UPDATE rounds SET end_time = $1, finished = true WHERE round_id = $2', [end_time, round_id])
+    
+  } catch (error) {
+    throw Error('Error updating end time')
+  }
+}
+
+
+
+
+// Get elapsed time using rounds Id from rounds table
+async function getElapsedTime(round_id) {
+  try {
+    const result = await pool.query('SELECT elapsed FROM rounds WHERE id = $1 AND finished = true', [round_id])
+    return result.rows[0]
+    
+  } catch (error) {
+    throw Error('Error fetching elapsed time')
+  }
+}
+
+
+
+// Submit name and elapsed time? to leaderboard
+async function submitToLeaderboard(name, round_id) {
+  try {
+    await pool.query(`
+                        INSERT into leaderboard (name, time) 
+                        SELECT $1 , rounds.elapsed
+                        FROM rounds
+                        WHERE rounds.id = $2 AND finished = true
+                        `, [name, round_id])
+    
+  } catch (error) {
+    throw Error('Error submitting name and time')
+  }
+}
+
+
+// Display name and time in leaderboard
+async function getNameAndTime() {
+  try {
+    const { rows } = await pool.query('SELECT name, time FROM leaderboard ORDER BY time ASC LIMIT 10');
+    return rows
+  } catch (error) {
+    throw Error('Error fetching leaderboard')
+  }
+}
 
 module.exports = {
   getLocationOfAllCharacters,
   getCoordinatesofLevel,
-  getCoordinatesofACharacter
-
+  getCoordinatesofACharacter,
+  getLevel,
+  startRound,
+  updateEndTimeRound,
+  getElapsedTime,
+  submitToLeaderboard,
+  getNameAndTime
 }
+
+
