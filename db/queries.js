@@ -77,9 +77,10 @@ async function startRound(startTime, image_id, session_id) {
 
 
 // Update end_time column for end of round
-async function updateEndTimeRound(end_time, round_id) {
+async function updateEndTimeRound(end_time, roundId) {
   try {
-    await pool.query('UPDATE rounds SET end_time = $1, finished = true WHERE round_id = $2', [end_time, round_id])
+    const result = await pool.query('UPDATE rounds SET end_time = $1, finished = true WHERE roundId = $2 RETURNING id', [end_time, roundId])
+    return result.rows[0]
     
   } catch (error) {
     throw Error('Error updating end time')
@@ -87,12 +88,24 @@ async function updateEndTimeRound(end_time, round_id) {
 }
 
 
+// Return round Id
+async function getRoundUsingId(roundId) {
+  try {
+    const result = await pool.query('SELECT * FROM rounds WHERE roundId = $1', [roundId])
+    return result.rows[0]
+    
+  } catch (error) {
+    throw Error('Error fetching round Id')
+  }
+  
+}
+
 
 
 // Get elapsed time using rounds Id from rounds table
-async function getElapsedTime(round_id) {
+async function getElapsedTime(roundId) {
   try {
-    const result = await pool.query('SELECT elapsed FROM rounds WHERE id = $1 AND finished = true', [round_id])
+    const result = await pool.query('SELECT elapsed FROM rounds WHERE id = $1 AND finished = true', [roundId])
     return result.rows[0]
     
   } catch (error) {
@@ -103,19 +116,21 @@ async function getElapsedTime(round_id) {
 
 
 // Submit name and elapsed time? to leaderboard
-async function submitToLeaderboard(name, round_id) {
+async function submitToLeaderboard(name, roundId) {
   try {
     await pool.query(`
                         INSERT into leaderboard (name, time) 
                         SELECT $1 , rounds.elapsed
                         FROM rounds
                         WHERE rounds.id = $2 AND finished = true
-                        `, [name, round_id])
+                        `, [name, roundId])
     
   } catch (error) {
     throw Error('Error submitting name and time')
   }
 }
+
+
 
 
 // Display name and time in leaderboard
@@ -137,7 +152,8 @@ module.exports = {
   updateEndTimeRound,
   getElapsedTime,
   submitToLeaderboard,
-  getNameAndTime
+  getNameAndTime,
+  getRoundUsingId,
 }
 
 
