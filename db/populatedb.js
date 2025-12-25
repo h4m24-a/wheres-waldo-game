@@ -6,24 +6,16 @@ const { Client } = require("pg"); //  used to interact with the PostgreSQL datab
 // SQL is a string containing SQL command
 const SQL = `
 
+  ALTER TABLE rounds
+DROP COLUMN elapsed;
 
-CREATE TABLE IF NOT EXISTS rounds (
- id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
- session_id TEXT,
- start_time TIMESTAMP NOT NULL,
- end_time TIMESTAMP,
- finished BOOLEAN,
- image_id INTEGER REFERENCES image (id)
-);
+ALTER TABLE rounds
+ALTER COLUMN start_time TYPE TIME USING start_time::time,
+ALTER COLUMN end_time   TYPE TIME USING end_time::time;
 
-CREATE TABLE IF NOT EXISTS leaderboard (
-  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name TEXT,
-  time INTERVAL,
-  created_at TIMESTAMP,
-  round_id INTEGER REFERENCES rounds (id)
-);
-
+ALTER TABLE rounds
+ADD COLUMN elapsed INTERVAL
+GENERATED ALWAYS AS (end_time - start_time) STORED;
 
 
 `;
@@ -76,3 +68,24 @@ main();
 //  time INTERVAL,    
 //  created_at TIMESTAMP,
 //  round_id INTEGER REFERENCES rounds (id)
+
+/*
+CREATE TABLE IF NOT EXISTS rounds (
+ id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+ session_id TEXT,
+ start_time TIMESTAMP NOT NULL,
+ end_time TIMESTAMP,
+ finished BOOLEAN,
+ image_id INTEGER REFERENCES image (id)
+);
+
+CREATE TABLE IF NOT EXISTS leaderboard (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name TEXT,
+  time INTERVAL,
+  created_at TIMESTAMP,
+  round_id INTEGER REFERENCES rounds (id)
+);
+
+
+*/
