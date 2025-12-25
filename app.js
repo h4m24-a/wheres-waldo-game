@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors')
 // require('dotenv').config();
+const session = require('express-session');
 const errorHandler = require('./middleware/error')
 const notFound = require('./middleware/notFound');
 
@@ -25,6 +26,16 @@ app.use(cors( {
   credentials: true     
 }));  // enables Cross-Origin Resource Sharing for all incoming requests.
 
+
+
+
+// Session set-up - // initializes sessions with a secure secret, avoids unnecessary saves, and only creates sessions when necessary
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,  // allows sessions without login,
+  cookie: { secure: true }
+}))
 
 
 // Adding route-handling code to the request handling chain. This will define particular routes for the different parts of the site
