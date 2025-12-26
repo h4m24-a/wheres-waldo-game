@@ -64,6 +64,24 @@ async function getLevel(id) {
 
 
 
+// Get number of characters in a particular level using image id
+async function getCharacterLevelCount(image_id) {
+  try {
+    const result = await pool.query(`
+                                    SELECT image.name, COUNT(location.image_id) as character_count 
+                                    FROM location
+                                    JOIN image
+                                    ON location.image_id = image.id
+                                    WHERE location.image_id = ($1)
+                                    GROUP BY image.name`  [image_id]);
+    return result.rows[0]
+    
+  } catch (error) {
+    throw Error('Error fetching count of level')
+  }
+}
+
+
 // Start the round
 async function startRound(startTime, image_id, session_id) {
   try {
@@ -154,6 +172,7 @@ module.exports = {
   submitToLeaderboard,
   getNameAndTime,
   getRoundUsingId,
+  getCharacterLevelCount
 }
 
 
