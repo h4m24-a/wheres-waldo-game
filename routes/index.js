@@ -25,7 +25,7 @@ router.post('/guess', validateGuessController)
 
 
 
-// Submit username name and time to leaderboard
+// Submit username name and time to leaderboard after round ended
 router.post('/submit', submitDataController);
 
 
