@@ -36,7 +36,7 @@ async function getCoordinatesofLevel(image_id) {
 async function getCoordinatesofACharacter(imageId, character_name) {
   try {
     const result = await pool.query(`
-                                           SELECT character_name, x, y, tolerance
+                                           SELECT id, character_name, x, y, tolerance
                                            FROM location  
                                            WHERE image_id = $1
                                            AND character_name = $2
@@ -73,7 +73,7 @@ async function getCharacterLevelCount(image_id) {
                                     JOIN image
                                     ON location.image_id = image.id
                                     WHERE location.image_id = ($1)
-                                    GROUP BY image.name`  [image_id]);
+                                    GROUP BY image.name`,  [image_id]);
     return result.rows[0]
     
   } catch (error) {
@@ -106,7 +106,7 @@ async function updateEndTimeRound(end_time, roundId) {
 }
 
 
-// Return round Id
+// Return a specific round entry using round Id
 async function getRoundUsingId(roundId) {
   try {
     const result = await pool.query('SELECT * FROM rounds WHERE roundId = $1', [roundId])
