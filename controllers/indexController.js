@@ -11,13 +11,15 @@ async function startGamePostController (req, res) {
 
     // Make query to database to get the path of selected level using imageId
     const level = await db.getLevel(imageId)
+
+
+    // Get number of characters in level
+    const result = await db.getCharacterLevelCount()
+    const totalCharacterCount = result.character_count
+    req.session.totalCharacterCount = totalCharacterCount   // Storing count in session
     
-    const time = new Date().toLocaleDateString([], {   // Take current time for Start Time
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-
+    const time = new Date()   // Take current time for Start Time
+     
 
     // Create new Round Entry in table (image id, session id, start time), also returns roundId
     const roundId = await db.startRound(time, imageId, sessionId)
@@ -50,16 +52,11 @@ async function startGamePostController (req, res) {
 // POST
 async function endGamePostController (req, res) {
   try {
-    
+
     const roundId = req.session.roundId
 
-
     // Take current time for End Time
-    const time = new Date().toLocaleDateString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    })
+    const time = new Date();
 
 
     if (!time || !roundId) {
@@ -73,7 +70,7 @@ async function endGamePostController (req, res) {
     delete req.session.roundId;     // clear active round
 
     res.json({
-      message: 'Round Ended'
+      message: 'Round Complete'
     })
 
   } catch (error) {
@@ -87,6 +84,17 @@ async function endGamePostController (req, res) {
 
 // POST - Validate character x, y cordinates    // client side should send, imageId, Character_name, x & y coordinates
 async function validateGuessController (req, res) {
+
+  const roundId = req.session.roundId
+  const totalCharacterCount = req.session.totalCharacterCount
+
+  // Create a character found array in session if it doesn't already exist
+  if (!req.session.characterFound) {
+    req.session.characterFound = []
+  }
+
+  req.session.characterFound = characterFoundArr
+
   try {     
 
     // Grab image id, character name, x, y from req.body
@@ -99,8 +107,7 @@ async function validateGuessController (req, res) {
     }
 
 
-    
-    
+
     // make call to database using corresponding query and arguments
     const coordinates = await db.getCoordinatesofACharacter(imageId, character_name)
     
@@ -110,29 +117,66 @@ async function validateGuessController (req, res) {
     if (!coordinates) {
      return res.status(400).json({ error: 'Character not found' })
     }
-
-  
+    
     const tolerance = Number(coordinates.tolerance)
+    const targetX = Number(coordinates.x);
+    const targetY = Number(coordinates.y)
 
     const correctGuess = 
-    x >= coordinates.x - tolerance &&     // x -
-    x <= coordinates.x + tolerance &&     // x +
-    y >= coordinates.y - tolerance &&     // y -
-    y <= coordinates.y + tolerance &&     // y +
+    x >= targetX - tolerance &&     // x -
+    x <= targetX + tolerance &&     // x +
+    y >= targetY - tolerance &&     // y -
+    y <= targetY + tolerance &&     // y +
     character_name === coordinates.character_name
+  
 
-
-    // success message if found
-    if (correctGuess) {
-      return res.status(200).json({
-        message: 'Correct Guess',
-        name: character_name
-      })
-
-    } else {
-      return res.status(200).json({ message: 'Incorrect guess'})
+    // duplicate guess
+    if (characterFoundArr.includes(coordinates.id)) {
+      return res.status(403).json({ message: 'Character already found'})
     }
 
+
+    // incorrect guess
+    if (!correctGuess) {
+      return res.json({ message: 'Incorrect Guess' })
+    }
+      
+
+    
+    // correct Guess - add id to the character found array
+    if (correctGuess) {
+      characterFoundArr.push(coordinates.id)
+    }
+
+
+
+    // Check if all characters found and end round.
+    if (characterFoundArr.length === totalCharacterCount) {
+  
+
+      // Take current time for End Time
+      const time = new Date();
+
+
+      // Update end_time in rounds table
+      await db.updateEndTimeRound(time, roundId)
+
+      delete req.session.roundId;     // clear active round
+      delete req.session.totalCharacterCount;
+      delete req.session.characterFound;
+
+      return res.json({ 
+        roundComplete: true,
+        message: 'All characters found' 
+      })
+    }
+
+
+    // Success message for correct guess - round continues. This is after check all characters because the function ends after the return statement. The game should end when the last character has been found. If ahead of character found function, the game wouldn't end.
+    return res.json({
+        correctGuess: true,
+        name: character_name
+      });
 
     
   } catch (error) {
@@ -220,3 +264,8 @@ Backend decides everything else.
 
 // round_id = one round, one score
 // session_id = one anonymous user (many rounds)
+
+
+
+
+// Always perform end of round or all characters found checks before sending the response.
