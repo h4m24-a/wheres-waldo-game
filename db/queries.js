@@ -51,6 +51,19 @@ async function getCoordinatesofACharacter(imageId, character_name) {
 
 
 
+// Get all Levels
+async function getAllLevels() {
+  try {
+    const { rows } = await pool.query('SELECT * FROM image');
+    return rows // this object has a property called rows. By using destructuring, we directly extract the rows property into the rows variable.
+    
+  } catch (error) {
+    throw Error('Error fetching levels')
+  }
+}
+
+
+
 // Get a specific level using imageId
 async function getLevel(id) {
   try {
@@ -61,6 +74,8 @@ async function getLevel(id) {
     throw Error('Error fetching level')
   }
 }
+
+
 
 
 
@@ -165,6 +180,7 @@ module.exports = {
   getLocationOfAllCharacters,
   getCoordinatesofLevel,
   getCoordinatesofACharacter,
+  getAllLevels,
   getLevel,
   startRound,
   updateEndTimeRound,
