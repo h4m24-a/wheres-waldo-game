@@ -50,6 +50,17 @@ async function getCoordinatesofACharacter(imageId, character_name) {
 }
 
 
+// Get character image path using image Id
+async function getCharacterImagePath(image_id) {
+  try {
+    const { rows } = await pool.query('SELECT character_name, image_id, image_path FROM location WHERE image_id = $1', [image_id]);
+    return rows
+  } catch (error) {
+    throw Error('Error fetching character image paths')
+  }
+}
+
+
 
 // Get all Levels
 async function getAllLevels() {
@@ -180,6 +191,7 @@ module.exports = {
   getLocationOfAllCharacters,
   getCoordinatesofLevel,
   getCoordinatesofACharacter,
+  getCharacterImagePath,
   getAllLevels,
   getLevel,
   startRound,

@@ -6,10 +6,11 @@ const { Client } = require("pg"); //  used to interact with the PostgreSQL datab
 // SQL is a string containing SQL command
 const SQL = `
 
-UPDATE location SET image_path = 'images/characters/wenda.jpg' WHERE id = 2;
-UPDATE location SET image_path = 'images/characters/wizard.jpg' WHERE id = 3;
-UPDATE location SET image_path = 'images/characters/odlaw.jpg' WHERE id = 4;
-UPDATE location SET image_path = 'images/characters/woof.jpg' WHERE id = 5;
+UPDATE location SET image_path = '/images/characters/wally.jpg' WHERE id = 1;
+UPDATE location SET image_path = '/images/characters/wenda.jpg' WHERE id = 2;
+UPDATE location SET image_path = '/images/characters/wizard.jpg' WHERE id = 3;
+UPDATE location SET image_path = '/images/characters/odlaw.jpg' WHERE id = 4;
+UPDATE location SET image_path = '/images/characters/woof.jpg' WHERE id = 5;
 
 
 `;
