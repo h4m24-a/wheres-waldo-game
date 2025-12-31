@@ -1,32 +1,82 @@
 const db = require('../db/queries')
 
 
-// POST
+
+// GET all Levels
+async function getAllLevelsController(req, res) {
+  try {
+    const levels = await db.getAllLevels()
+
+    if (!levels) {
+      return res.status(404).json({ error: 'There are no levels' })
+    }
+
+    res.json(levels)    // Return response (levels) as JSON
+    
+  } catch (error) {
+    res.status(500).json({ error:'Failed to fetch levels' })
+  }
+
+}
+
+
+// GET /round/start/:imageId
+async function getLevelController(req, res) {
+  try {
+    const imageId = parseInt(req.params.imageId)
+
+    if(isNaN(imageId)) {
+      return res.status(400).json({ error:'imageId is not a number' })
+    }
+
+
+    
+    const level = await db.getLevel(imageId) // returns image id , name, path
+
+    
+    if (!level) {
+      return res.status(404).json({ error: 'Level not found' })
+    }
+
+    
+    const result = await db.getCharacterLevelCount()        // Get number of characters in level
+    const totalCharacterCount = result.character_count
+    req.session.totalCharacterCount = totalCharacterCount   // Storing count in session
+
+
+    res.json({ 
+      message: 'Loaded Level',
+      level
+    })
+    
+  } catch (error) {
+    throw Error('Error fetching level')
+  }
+}
+
+
+
+// POST   /round/start/:imageId
 async function startGamePostController (req, res) {
   try {
 
-    const imageId = parseInt(req.params.imageId)
-    const sessionId = req.sessionId
-     
+    const sessionId = req.sessionID; // Access session id
 
-    // Make query to database to get the path of selected level using imageId
-    const level = await db.getLevel(imageId)
+  
+    const imageId = parseInt(req.params.imageId)    // image id from url param
 
 
-    // Get number of characters in level
-    const result = await db.getCharacterLevelCount()
-    const totalCharacterCount = result.character_count
-    req.session.totalCharacterCount = totalCharacterCount   // Storing count in session
-    
+
     const time = new Date()   // Take current time for Start Time
      
+    
+    if (req.session.roundId) {
+      return res.status(400).json({ error: 'Round already active' })
+    }
 
     // Create new Round Entry in table (image id, session id, start time), also returns roundId
     const roundId = await db.startRound(time, imageId, sessionId)
 
-    if (req.session.roundId) {
-      return res.status(400).json({ error: 'Round already active' })
-    }
 
     req.session.roundId = roundId   // Add roundId to session
 
@@ -34,9 +84,7 @@ async function startGamePostController (req, res) {
 
     // Send back response including path name
     res.status(200).json({ 
-      message: 'Level Loaded',
-      levelName: level.name,
-      path: level.path,
+      message: 'Round Started',
       roundId: roundId
     })
 
@@ -236,7 +284,9 @@ module.exports = {
   endGamePostController,
   submitDataController,
   validateGuessController,
-  getNameAndTimeController
+  getNameAndTimeController,
+  getAllLevelsController,
+  getLevelController
 }
 
 
