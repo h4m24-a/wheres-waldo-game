@@ -50,7 +50,7 @@ async function getLevelController(req, res) {
     })
     
   } catch (error) {
-    throw Error('Error fetching level')
+     res.status(500).json({ error: 'Failed to start game' })
   }
 }
 
@@ -69,7 +69,7 @@ async function startGamePostController (req, res) {
 
     const time = new Date()   // Take current time for Start Time
      
-    
+
     if (req.session.roundId) {
       return res.status(400).json({ error: 'Round already active' })
     }
