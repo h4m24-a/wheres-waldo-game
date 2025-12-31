@@ -1,23 +1,23 @@
 const express = require('express');
-const { startGamePostController, endGamePostController, submitDataController, validateGuessController, getNameAndTimeController } = require('../controllers/indexController')
+const {getAllLevelsController, getLevelController, startGamePostController, endGamePostController, submitDataController, validateGuessController, getNameAndTimeController } = require('../controllers/indexController')
 
 const router = express.Router();
 
 
-router.get('/home', (req, res) => {
-  res.send('Home Page')
-})
+// Home Menu - displays all levels
+router.get('/menu', getAllLevelsController) 
+
+
+// Get Level
+router.get('/round/start/:imageId', getLevelController)
 
 
 // Start Game (iniate round and start timer)
 router.post('/round/start/:imageId', startGamePostController);
 
 
-
-
 // End game (Stop and Save time)
 router.post('/round/end', endGamePostController);
-
 
 
 // Validate Guess
