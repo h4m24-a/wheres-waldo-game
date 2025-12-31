@@ -6,20 +6,13 @@ const { Client } = require("pg"); //  used to interact with the PostgreSQL datab
 // SQL is a string containing SQL command
 const SQL = `
 
-  ALTER TABLE rounds
-DROP COLUMN elapsed;
-
-ALTER TABLE rounds
-ALTER COLUMN start_time TYPE TIME USING start_time::time,
-ALTER COLUMN end_time   TYPE TIME USING end_time::time;
-
-ALTER TABLE rounds
-ADD COLUMN elapsed INTERVAL
-GENERATED ALWAYS AS (end_time - start_time) STORED;
+UPDATE location SET image_path = 'images/characters/wenda.jpg' WHERE id = 2;
+UPDATE location SET image_path = 'images/characters/wizard.jpg' WHERE id = 3;
+UPDATE location SET image_path = 'images/characters/odlaw.jpg' WHERE id = 4;
+UPDATE location SET image_path = 'images/characters/woof.jpg' WHERE id = 5;
 
 
 `;
-
 
 
 async function main() {         // async function
@@ -88,4 +81,14 @@ CREATE TABLE IF NOT EXISTS leaderboard (
 );
 
 
+ALTER TABLE rounds
+DROP COLUMN elapsed;
+
+ALTER TABLE rounds
+ALTER COLUMN start_time TYPE TIME USING start_time::time,
+ALTER COLUMN end_time   TYPE TIME USING end_time::time;
+
+ALTER TABLE rounds
+ADD COLUMN elapsed INTERVAL
+GENERATED ALWAYS AS (end_time - start_time) STORED;
 */
