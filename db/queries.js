@@ -76,9 +76,9 @@ async function getAllLevels() {
 
 
 // Get a specific level using imageId
-async function getLevel(id) {
+async function getLevel(imageId) {
   try {
-    const result = await pool.query('SELECT name, path FROM image WHERE id = $1', [id]);
+    const result = await pool.query('SELECT * FROM image WHERE id = $1', [imageId]);
     return result.rows[0]
     
   } catch (error) {
