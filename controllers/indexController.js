@@ -23,10 +23,11 @@ async function getAllLevelsController(req, res) {
 // GET /round/start/:imageId
 async function getLevelController(req, res) {
   try {
-    const imageId = parseInt(req.params.imageId)
 
-    if(isNaN(imageId)) {
-      return res.status(400).json({ error:'imageId is not a number' })
+    const imageId = parseInt(req.params.imageId) 
+
+    if (isNaN(imageId)) {
+      return res.status(400).json({ error: 'Invalid image ID' });
     }
 
 
@@ -39,14 +40,17 @@ async function getLevelController(req, res) {
     }
 
     
-    const result = await db.getCharacterLevelCount()        // Get number of characters in level
-    const totalCharacterCount = result.character_count
+    const result = await db.getCharacterLevelCount(imageId)        // Get number of characters in level
+    const totalCharacterCount = parseInt(result.character_count)
     req.session.totalCharacterCount = totalCharacterCount   // Storing count in session
 
 
+    const characters = await db.getCharacterImagePath(imageId)
+
     res.json({ 
+      level,
+      characters,
       message: 'Loaded Level',
-      level
     })
     
   } catch (error) {
