@@ -24,6 +24,9 @@ async function getAllLevelsController(req, res) {
 async function getLevelController(req, res) {
   try {
 
+    const sessionId = req.sessionID; // Access session id
+    console.log(sessionId)
+
     const imageId = parseInt(req.params.imageId) 
 
     if (isNaN(imageId)) {
@@ -67,34 +70,38 @@ async function startGamePostController (req, res) {
     const sessionId = req.sessionID; // Access session id
 
   
-    const imageId = parseInt(req.params.imageId)    // image id from url param
+    const imageId = parseInt(req.params.imageId)     // image id from url param
 
 
 
-    const time = new Date()   // Take current time for Start Time
+    const now = new Date();  // Tue Jan 06 2026 00:25:16 GMT+0000 (Greenwich Mean Time)
+
+    const timeOnly = now.toTimeString().split(' ')[0];    // "00:25:16"   -- Only gets the time
      
 
     if (req.session.roundId) {
       return res.status(400).json({ error: 'Round already active' })
     }
 
+    
     // Create new Round Entry in table (image id, session id, start time), also returns roundId
-    const roundId = await db.startRound(time, imageId, sessionId)
+    const roundId = await db.startRound(timeOnly, imageId, sessionId)
 
 
     req.session.roundId = roundId   // Add roundId to session
 
     
 
-    // Send back response including path name
+    // Send back response
     res.status(200).json({ 
       message: 'Round Started',
-      roundId: roundId
+      roundId
     })
 
-    
   } catch (error) {
-    res.status(500).json({ error: 'Failed to start game' })
+
+    console.error("Start Game Error:", error);
+    res.status(500).json({ error: 'Failed to start game' });
   }
 }
 
@@ -137,8 +144,8 @@ async function endGamePostController (req, res) {
 // POST - Validate character x, y cordinates    // client side should send, imageId, Character_name, x & y coordinates
 async function validateGuessController (req, res) {
 
-  const roundId = req.session.roundId
-  const totalCharacterCount = req.session.totalCharacterCount
+  const roundId = req.session.roundId   // Retrieve round id from session
+  const totalCharacterCount = req.session.totalCharacterCount   // Retrieve total character count from session
 
   // Create a character found array in session if it doesn't already exist
   if (!req.session.characterFound) {
@@ -232,7 +239,8 @@ async function validateGuessController (req, res) {
 
     
   } catch (error) {
-    res.status(400),json({ error: 'Server Error' })
+    console.error("Validate Guess Error:", error);
+    res.status(400).json({ error: 'Server Error' })
   }
 }
 
