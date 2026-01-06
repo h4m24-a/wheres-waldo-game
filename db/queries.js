@@ -111,9 +111,10 @@ async function getCharacterLevelCount(image_id) {
 // Start the round
 async function startRound(startTime, image_id, session_id) {
   try {
-    const result = await pool.query('INSERT into rounds (start_time, image_id, sessionId) VALUES ($1, $2, $3) RETURNING id', [startTime, image_id, session_id])
+    const result = await pool.query('INSERT into rounds (start_time, image_id, session_id) VALUES ($1, $2, $3) RETURNING id', [startTime, image_id, session_id])
     return result.rows[0].id // round_id
   } catch (error) {
+    console.error("DB startRound error:", error);
     throw Error('Error adding start time')
   }
   
