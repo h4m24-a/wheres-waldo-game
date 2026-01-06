@@ -33,7 +33,9 @@ app.use(cors( {
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
+  secure: false,  // set to true in production
   saveUninitialized: true,  // allows sessions without login,
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 
 
