@@ -106,6 +106,36 @@ async function startGamePostController (req, res) {
 }
 
 
+// GET - Get round id to make sure that the roundId persists after refresh
+async function getCurrentRoundController (req, res) {
+  try {
+  
+    // Get RoundId
+    const roundId = req.session.roundId
+
+    if (!roundId) {
+      return res.json({ error: 'No active round' })
+    }
+
+    // Check if session is active -  if true - get the roundId and return a json response otherwise dont return anything
+
+    return res.json({
+      roundActive: true,
+      roundId
+      })
+    
+    
+    
+    // on the frontend it willbe stored in the roundId state
+    
+  } catch (error) {
+    console.error("Current Round Error:", error);
+    res.status(500).json({ error: 'Failed to retrieve current round' });
+    
+  }
+}
+
+
 
 
 // POST
@@ -266,6 +296,7 @@ async function submitDataController (req, res) {
     
     
   } catch (error) {
+    console.error("Submit to leaderboard:", error);
     res.status(500).json({ error: 'Failed to submit details' })
   }
 }
@@ -287,6 +318,7 @@ async function getNameAndTimeController(req, res) {
     })
 
   } catch (error) {
+    console.error("Leaderboard:", error);
     res.status(500).json({ error: 'Error fetching leaderboard'})
   }
 }
@@ -298,7 +330,8 @@ module.exports = {
   validateGuessController,
   getNameAndTimeController,
   getAllLevelsController,
-  getLevelController
+  getLevelController,
+  getCurrentRoundController
 }
 
 
