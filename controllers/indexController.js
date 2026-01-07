@@ -106,27 +106,25 @@ async function startGamePostController (req, res) {
 }
 
 
-// GET - Get round id to make sure that the roundId persists after refresh
+// GET - Get round id to make sure that the roundId persists after refresh using current session
 async function getCurrentRoundController (req, res) {
   try {
   
-    // Get RoundId
+    // Get RoundId if there is a roundId
     const roundId = req.session.roundId
 
+    
+    // No active RoundId
     if (!roundId) {
       return res.json({ error: 'No active round' })
     }
 
-    // Check if session is active -  if true - get the roundId and return a json response otherwise dont return anything
-
+    // if true - get the roundId and return a json response with roundId
     return res.json({
       roundActive: true,
       roundId
       })
     
-    
-    
-    // on the frontend it willbe stored in the roundId state
     
   } catch (error) {
     console.error("Current Round Error:", error);
@@ -243,12 +241,13 @@ async function validateGuessController (req, res) {
     if (characterFoundArr.length === totalCharacterCount) {
   
 
-      // Take current time for End Time
-      const time = new Date();
+      const now = new Date();  // Tue Jan 06 2026 00:25:16 GMT+0000 (Greenwich Mean Time)
+
+      const timeOnly = now.toTimeString().split(' ')[0];    // "00:25:16"   -- Only gets the time
 
 
       // Update end_time in rounds table
-      await db.updateEndTimeRound(time, roundId)
+      await db.updateEndTimeRound(timeOnly, roundId)
 
       delete req.session.roundId;     // clear active round
       delete req.session.totalCharacterCount;
