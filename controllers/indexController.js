@@ -47,6 +47,16 @@ async function getLevelController(req, res) {
     const totalCharacterCount = parseInt(result.character_count)
     req.session.totalCharacterCount = totalCharacterCount   // Storing count in session
 
+  
+    
+    // Create a character found array in session if it doesn't already exist
+    if (!req.session.characterFound) {
+      req.session.characterFound = []
+    }
+    
+     console.log('Total Character Count', totalCharacterCount)
+     console.log('Found Characters', req.session.characterFound)
+  
 
     const characters = await db.getCharacterImagePath(imageId)
 
@@ -89,7 +99,7 @@ async function startGamePostController (req, res) {
 
 
     req.session.roundId = roundId   // Add roundId to session
-
+    
     
 
     // Send back response
@@ -175,22 +185,20 @@ async function validateGuessController (req, res) {
   const roundId = req.session.roundId   // Retrieve round id from session
   const totalCharacterCount = req.session.totalCharacterCount   // Retrieve total character count from session
 
-  // Create a character found array in session if it doesn't already exist
-  if (!req.session.characterFound) {
-    req.session.characterFound = []
-  }
 
-  req.session.characterFound = characterFoundArr
 
   try {     
-
     // Grab image id, character name, x, y from req.body
     const { imageId, x, y, character_name } = req.body;
 
     
     // Validate the data from frontend
-    if (!imageId || !x  || !y) {
-      return res.status(400).json({ error: 'No data' })
+    if (
+      imageId == null ||
+      x == null ||
+      y == null
+    ) {
+      return res.status(400).json({ error: 'Missing data' })
     }
 
 
@@ -218,7 +226,7 @@ async function validateGuessController (req, res) {
   
 
     // duplicate guess
-    if (characterFoundArr.includes(coordinates.id)) {
+    if (req.session.characterFound.includes(coordinates.character_name)) {
       return res.status(403).json({ message: 'Character already found'})
     }
 
@@ -232,13 +240,13 @@ async function validateGuessController (req, res) {
     
     // correct Guess - add id to the character found array
     if (correctGuess) {
-      characterFoundArr.push(coordinates.id)
+      req.session.characterFound.push(coordinates.character_name)
     }
 
 
 
     // Check if all characters found and end round.
-    if (characterFoundArr.length === totalCharacterCount) {
+    if (req.session.characterFound.length === totalCharacterCount) {
   
 
       const now = new Date();  // Tue Jan 06 2026 00:25:16 GMT+0000 (Greenwich Mean Time)
@@ -250,11 +258,12 @@ async function validateGuessController (req, res) {
       await db.updateEndTimeRound(timeOnly, roundId)
 
       delete req.session.roundId;     // clear active round
-      delete req.session.totalCharacterCount;
-      delete req.session.characterFound;
+      delete req.session.totalCharacterCount;   // clear total character count session  
+      delete req.session.characterFound;        // clear character found array session
 
       return res.json({ 
         roundComplete: true,
+        name: character_name,
         message: 'All characters found' 
       })
     }
