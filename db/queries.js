@@ -124,7 +124,7 @@ async function startRound(startTime, image_id, session_id) {
 // Update end_time column for end of round
 async function updateEndTimeRound(end_time, roundId) {
   try {
-    const result = await pool.query('UPDATE rounds SET end_time = $1, finished = true WHERE roundId = $2 RETURNING id', [end_time, roundId])
+    const result = await pool.query('UPDATE rounds SET end_time = $1, finished = true WHERE id = $2 RETURNING id', [end_time, roundId])
     return result.rows[0]
     
   } catch (error) {
