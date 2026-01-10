@@ -57,12 +57,15 @@ async function getLevelController(req, res) {
      console.log('Total Character Count', totalCharacterCount)
      console.log('Found Characters', req.session.characterFound)
   
+     
+  
 
     const characters = await db.getCharacterImagePath(imageId)
 
     res.json({ 
       level,
       characters,
+      totalCharacterCount,
       message: 'Loaded Level',
     })
     
@@ -227,16 +230,24 @@ async function validateGuessController (req, res) {
 
     // duplicate guess
     if (req.session.characterFound.includes(coordinates.character_name)) {
-      return res.status(403).json({ message: 'Character already found'})
+      return res.json({ 
+        message: 'Character already found',
+        duplicate: true,
+        correctGuess: false,
+      })
     }
 
 
     // incorrect guess
     if (!correctGuess) {
-      return res.json({ message: 'Incorrect Guess' })
+      return res.json({
+        message: 'Incorrect Guess',
+        correctGuess: false,
+      })
     }
       
 
+  
     
     // correct Guess - add id to the character found array
     if (correctGuess) {
@@ -248,6 +259,7 @@ async function validateGuessController (req, res) {
     // Check if all characters found and end round.
     if (req.session.characterFound.length === totalCharacterCount) {
   
+      
 
       const now = new Date();  // Tue Jan 06 2026 00:25:16 GMT+0000 (Greenwich Mean Time)
 
@@ -257,14 +269,12 @@ async function validateGuessController (req, res) {
       // Update end_time in rounds table
       await db.updateEndTimeRound(timeOnly, roundId)
 
-      delete req.session.roundId;     // clear active round
-      delete req.session.totalCharacterCount;   // clear total character count session  
-      delete req.session.characterFound;        // clear character found array session
+  
 
       return res.json({ 
         roundComplete: true,
         name: character_name,
-        message: 'All characters found' 
+        message: 'You Win! All characters found' 
       })
     }
 
@@ -272,7 +282,8 @@ async function validateGuessController (req, res) {
     // Success message for correct guess - round continues. This is after check all characters because the function ends after the return statement. The game should end when the last character has been found. If ahead of character found function, the game wouldn't end.
     return res.json({
         correctGuess: true,
-        name: character_name
+        name: character_name,
+        message: 'Correct Guess'
       });
 
     
@@ -297,6 +308,11 @@ async function submitDataController (req, res) {
     }
 
     await db.submitToLeaderboard(name, roundId)
+
+
+    delete req.session.roundId;     // clear active round
+    delete req.session.totalCharacterCount;   // clear total character count session  
+    delete req.session.characterFound;        // clear character found array session
 
     res.json({
       message: 'Name submitted to leaderboard'
