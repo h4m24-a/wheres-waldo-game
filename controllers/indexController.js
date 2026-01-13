@@ -149,36 +149,6 @@ async function getCurrentRoundController (req, res) {
 
 
 
-// POST
-async function endGamePostController (req, res) {
-  try {
-
-    const roundId = req.session.roundId
-
-    // Take current time for End Time
-    const time = new Date();
-
-
-    if (!time || !roundId) {
-     return res.status(400).json({ error: "End time and round id are required." })
-    }
-
-
-    // Update end_time in rounds table
-    await db.updateEndTimeRound(time, roundId)
-
-    delete req.session.roundId;     // clear active round
-
-    res.json({
-      message: 'Round Complete'
-    })
-
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to end game' })
-    
-  }
-}
-
 
 
 
@@ -237,7 +207,6 @@ async function validateGuessController (req, res) {
       })
     }
 
-
     // incorrect guess
     if (!correctGuess) {
       return res.json({
@@ -267,12 +236,21 @@ async function validateGuessController (req, res) {
 
 
       // Update end_time in rounds table
-      await db.updateEndTimeRound(timeOnly, roundId)
+      const result = await db.updateEndTimeRound(timeOnly, roundId)
+      
 
-  
+      const finished = result.finished
+      console.log(finished)
+
+    
+      req.session.finished = true
+     
+      
+      
 
       return res.json({ 
         roundComplete: true,
+        finished,
         name: character_name,
         message: 'You Win! All characters found' 
       })
@@ -295,32 +273,58 @@ async function validateGuessController (req, res) {
 
 
 
+
+// GET - Check to see if the current round is finished
+async function finishedPostController (req, res) {
+  try {
+    
+    // Check if game is finished in session
+    const finished = req.session.finished || false // Default to false if not set
+
+    res.json({
+      finished, // send back finished boolean value,
+      message: 'You Win, All Characters Found!'
+    })
+    
+    
+  } catch (error) {
+    console.error("Check if game is finished:", error);
+    res.status(500).json({ error: 'Failed to to check if game is finished' })
+  }
+}
+
+
+
 // POST - submit name to leaderboard
 async function submitDataController (req, res) {
   try {
     
-    const { name } = req.body;
-    const roundId = req.session.roundId
+    const { username } = req.body;
+    const roundId = req.session.roundId;
+    console.log('Session:', req.session);
+
+   
 
 
-    if (!name || !roundId) {
-      return res.status(400).json({ error: 'No name or Round id' })
+    if (!username || isNaN(roundId)) {
+      return res.status(400).json({ error: 'No username or Round id' })
     }
 
-    await db.submitToLeaderboard(name, roundId)
+    await db.submitToLeaderboard(username, roundId)
 
 
     delete req.session.roundId;     // clear active round
     delete req.session.totalCharacterCount;   // clear total character count session  
     delete req.session.characterFound;        // clear character found array session
+    delete req.session.finished
 
     res.json({
-      message: 'Name submitted to leaderboard'
+      message: 'Username submitted to leaderboard'
     })
     
     
   } catch (error) {
-    console.error("Submit to leaderboard:", error);
+    console.error("Submit to leaderboard Controller:", error);
     res.status(500).json({ error: 'Failed to submit details' })
   }
 }
@@ -330,15 +334,17 @@ async function submitDataController (req, res) {
 async function getNameAndTimeController(req, res) {
   try {
     
-    const leaderboard = await db.getNameAndTime(); // Get name and time from DB
+    const imageId = parseInt(req.params.imageId)     // image id from url param
+    const leaderboard = await db.getNameAndTime(imageId); // Get name and time from DB for particular map (imageId)
+    
 
-    if (!leaderboard || leaderboard.length === 0) {
+    if (!leaderboard || !imageId || leaderboard.length === 0) {
       return res.status(404).json({ error: 'No results' })
     }
 
     res.json({
       message: 'Fetched leaderboard',
-      leaderboard
+      leaderboard // returns name, time, image_id
     })
 
   } catch (error) {
@@ -349,7 +355,7 @@ async function getNameAndTimeController(req, res) {
 
 module.exports = {
   startGamePostController,
-  endGamePostController,
+  finishedPostController,
   submitDataController,
   validateGuessController,
   getNameAndTimeController,
