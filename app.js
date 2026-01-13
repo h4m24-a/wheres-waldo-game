@@ -35,7 +35,10 @@ app.use(session({
   resave: false,
   secure: false,  // set to true in production
   saveUninitialized: true,  // allows sessions without login,
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000
+  }
+
 }))
 
 
