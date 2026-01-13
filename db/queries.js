@@ -182,7 +182,7 @@ async function submitToLeaderboard(name, roundId) {
 async function getNameAndTime(image_id) {
   try {
     const { rows } = await pool.query(`
-                                      SELECT l.*, rounds.image_id, rounds.id
+                                      SELECT leaderboard.name, leaderboard.time, leaderboard.round_id, rounds.image_id
                                       FROM leaderboard
                                       JOIN rounds ON leaderboard.round_id = rounds.id
                                       WHERE image_id = $1
