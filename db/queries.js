@@ -124,7 +124,7 @@ async function startRound(startTime, image_id, session_id) {
 // Update end_time column for end of round
 async function updateEndTimeRound(end_time, roundId) {
   try {
-    const result = await pool.query('UPDATE rounds SET end_time = $1, finished = true WHERE id = $2 RETURNING id', [end_time, roundId])
+    const result = await pool.query('UPDATE rounds SET end_time = $1, finished = true WHERE id = $2 RETURNING id, finished', [end_time, roundId])
     return result.rows[0]
     
   } catch (error) {
@@ -164,11 +164,11 @@ async function getElapsedTime(roundId) {
 async function submitToLeaderboard(name, roundId) {
   try {
     await pool.query(`
-                        INSERT into leaderboard (name, time) 
-                        SELECT $1 , rounds.elapsed
+                        INSERT INTO leaderboard (name, time, round_id)
+                        SELECT $1, rounds.elapsed, $2
                         FROM rounds
-                        WHERE rounds.id = $2 AND finished = true
-                        `, [name, roundId])
+                        WHERE rounds.id = $2 AND rounds.finished = true
+                          `, [name, roundId]) // $1 is name, $2 is roundId, rounds.elapsed is retrieving the elapsed from rounds
     
   } catch (error) {
     throw Error('Error submitting name and time')
@@ -179,9 +179,15 @@ async function submitToLeaderboard(name, roundId) {
 
 
 // Display name and time in leaderboard
-async function getNameAndTime() {
+async function getNameAndTime(image_id) {
   try {
-    const { rows } = await pool.query('SELECT name, time FROM leaderboard ORDER BY time ASC LIMIT 10');
+    const { rows } = await pool.query(`
+                                      SELECT l.*, rounds.image_id, rounds.id
+                                      FROM leaderboard
+                                      JOIN rounds ON leaderboard.round_id = rounds.id
+                                      WHERE image_id = $1
+                                      ORDER BY time ASC LIMIT 10 
+                                      `, [image_id]);
     return rows
   } catch (error) {
     throw Error('Error fetching leaderboard')
