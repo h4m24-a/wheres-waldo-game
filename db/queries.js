@@ -182,11 +182,11 @@ async function submitToLeaderboard(name, roundId) {
 async function getNameAndTime(image_id) {
   try {
     const { rows } = await pool.query(`
-                                      SELECT leaderboard.name, leaderboard.time, leaderboard.round_id, rounds.image_id
+                                      SELECT leaderboard.id, leaderboard.name, leaderboard.time, leaderboard.round_id, rounds.image_id
                                       FROM leaderboard
                                       JOIN rounds ON leaderboard.round_id = rounds.id
                                       WHERE image_id = $1
-                                      ORDER BY time ASC LIMIT 10 
+                                      ORDER BY time ASC LIMIT 15 
                                       `, [image_id]);
     return rows
   } catch (error) {
