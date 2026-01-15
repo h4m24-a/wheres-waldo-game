@@ -283,7 +283,7 @@ async function finishedPostController (req, res) {
 
     res.json({
       finished, // send back finished boolean value,
-      message: 'You Win, All Characters Found!'
+      message: finished ? 'You Win, All Characters Found!' : 'In Progress'
     })
     
     
