@@ -189,7 +189,7 @@ async function getNameAndTime(image_id) {
                                       JOIN image
                                       on rounds.image_id = image.id
                                       WHERE image_id = $1
-                                      ORDER BY time ASC LIMIT 15 
+                                      ORDER BY time ASC LIMIT 12
                                       `, [image_id]);
     return rows
   } catch (error) {
