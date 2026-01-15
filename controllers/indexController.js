@@ -275,7 +275,7 @@ async function validateGuessController (req, res) {
 
 
 // GET - Check to see if the current round is finished
-async function finishedPostController (req, res) {
+async function finishedRoundController (req, res) {
   try {
     
     // Check if game is finished in session
@@ -283,7 +283,7 @@ async function finishedPostController (req, res) {
 
     res.json({
       finished, // send back finished boolean value,
-      message: finished ? 'You Win, All Characters Found!' : 'In Progress'
+      message: finished ? 'You Win, All Characters Found!' : 'In P'
     })
     
     
@@ -355,7 +355,7 @@ async function getNameAndTimeController(req, res) {
 
 module.exports = {
   startGamePostController,
-  finishedPostController,
+  finishedRoundController,
   submitDataController,
   validateGuessController,
   getNameAndTimeController,
