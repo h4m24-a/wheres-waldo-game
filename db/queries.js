@@ -150,7 +150,7 @@ async function getRoundUsingId(roundId) {
 // Get elapsed time using rounds Id from rounds table
 async function getElapsedTime(roundId) {
   try {
-    const result = await pool.query('SELECT elapsed FROM rounds WHERE id = $1 AND finished = true', [roundId])
+    const result = await pool.query('SELECT id, elapsed FROM rounds WHERE id = $1 AND finished = true', [roundId])
     return result.rows[0]
     
   } catch (error) {
