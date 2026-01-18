@@ -60,6 +60,8 @@ async function getLevelController(req, res) {
      
   
 
+    req.session.save();
+    
     const characters = await db.getCharacterImagePath(imageId)
 
     res.json({ 
@@ -103,6 +105,8 @@ async function startGamePostController (req, res) {
 
     req.session.roundId = roundId   // Add roundId to session
     
+
+    req.session.save();
     
 
     // Send back response
@@ -131,6 +135,8 @@ async function getCurrentRoundController (req, res) {
     if (!roundId) {
       return res.json({ error: 'No active round' })
     }
+
+    req.session.save();
 
     // if true - get the roundId and return a json response with roundId
     return res.json({
@@ -240,18 +246,26 @@ async function validateGuessController (req, res) {
       
 
       const finished = result.finished
-      console.log(finished)
-
-    
       req.session.finished = true
-     
-      
-      
 
+
+      req.session.save();
+
+      // Get elapsed time
+      const elapsedResult = await db.getElapsedTime(roundId)
+     
+      const time = elapsedResult?.elapsed
+
+      if (!time) {
+        return res.json({error: 'No elapsed time'})
+      }
+      
+    
       return res.json({ 
         roundComplete: true,
         finished,
         name: character_name,
+        time,
         message: 'You Win! All characters found' 
       })
     }
@@ -281,9 +295,11 @@ async function finishedRoundController (req, res) {
     // Check if game is finished in session
     const finished = req.session.finished || false // Default to false if not set
 
+    req.session.save();
+
     res.json({
       finished, // send back finished boolean value,
-      message: finished ? 'You Win, All Characters Found!' : 'In P'
+      message: finished ? 'You Win, All Characters Found!' : 'In Progress'
     })
     
     
@@ -309,17 +325,21 @@ async function submitDataController (req, res) {
     if (!username || isNaN(roundId)) {
       return res.status(400).json({ error: 'No username or Round id' })
     }
+   
 
     await db.submitToLeaderboard(username, roundId)
-
-
+    
     delete req.session.roundId;     // clear active round
     delete req.session.totalCharacterCount;   // clear total character count session  
     delete req.session.characterFound;        // clear character found array session
     delete req.session.finished
 
-    res.json({
-      message: 'Username submitted to leaderboard'
+    
+    
+    req.session.destroy(() => {
+      res.json({
+        message: 'Username submitted to leaderboard',
+      })
     })
     
     
