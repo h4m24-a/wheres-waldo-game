@@ -25,7 +25,6 @@ async function getLevelController(req, res) {
   try {
 
     const sessionId = req.sessionID; // Access session id
-    console.log(sessionId)
 
     const imageId = parseInt(req.params.imageId) 
 
@@ -54,9 +53,6 @@ async function getLevelController(req, res) {
       req.session.characterFound = []
     }
     
-     console.log('Total Character Count', totalCharacterCount)
-     console.log('Found Characters', req.session.characterFound)
-  
      
   
 
@@ -295,10 +291,20 @@ async function finishedRoundController (req, res) {
     // Check if game is finished in session
     const finished = req.session.finished || false // Default to false if not set
 
+    const roundId = req.session.roundId;
+
+  
+    const dbResult = await db.getElapsedTime(roundId)
+
+    
+    const time = dbResult?.elapsed
+    
+
     req.session.save();
 
     res.json({
       finished, // send back finished boolean value,
+      time,
       message: finished ? 'You Win, All Characters Found!' : 'In Progress'
     })
     
@@ -317,7 +323,7 @@ async function submitDataController (req, res) {
     
     const { username } = req.body;
     const roundId = req.session.roundId;
-    console.log('Session:', req.session);
+    
 
    
 
