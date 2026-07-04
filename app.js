@@ -1,31 +1,36 @@
 const express = require('express');
 const cors = require('cors')
-// require('dotenv').config();
+require('dotenv').config();
 const session = require('express-session');
 const errorHandler = require('./middleware/error')
 const notFound = require('./middleware/notFound');
+const PORT = process.env.PORT
 
 const app = express();
 
 
-// Routers
-let indexRouter = require('./routes/index');
+
+app.set("trust proxy", 1);
+
+const corsOptions = {
+  origin: "https://wheres-waldo-frontend-production-6b16.up.railway.app",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
 
 // Serve static files
 app.use(express.static('public'))   // 'public' is my static folder.
-
-
 
 // Body parser middleware
 app.use(express.json());  // submit raw json
 
 app.use(express.urlencoded({ extended: true }));  // This middleware parses this data and makes it available in req.body as a js object. express.urlencoded() is a built-in middleware function in Express that parses incoming requests with URL-encoded payloads. Used when data is submitted from HTML
 
-app.use(cors( {
-  origin: ["http://localhost:5173", "http://localhost:3000"],
-  credentials: true     
-}));  // enables Cross-Origin Resource Sharing for all incoming requests.
-
+// Routers
+let indexRouter = require('./routes/index');
 
 
 
@@ -33,12 +38,11 @@ app.use(cors( {
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  secure: false,  // set to true in production
+  secure: true,  // set to true in production
   saveUninitialized: true,  // allows sessions without login,
   cookie: {
     maxAge: 24 * 60 * 60 * 1000
   }
-
 }))
 
 
@@ -53,6 +57,6 @@ app.use(notFound);
 // Error handler - order in which functions declare matter - errorhandler is below  the routes
 app.use(errorHandler);
 
-app.listen(3000, () => {
-  console.log('Server listening on PORT 3000')
+app.listen(PORT, () => {
+  console.log('Server listening on', PORT)
 })
