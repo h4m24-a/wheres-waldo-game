@@ -38,6 +38,7 @@ let indexRouter = require('./routes/index');
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
+  sameSite: 'none',
   secure: true,  // set to true in production
   saveUninitialized: true,  // allows sessions without login,
   cookie: {
