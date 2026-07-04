@@ -38,14 +38,13 @@ let indexRouter = require('./routes/index');
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  sameSite: 'none',
-  secure: true,  // set to true in production
-  saveUninitialized: true,  // allows sessions without login,
+  saveUninitialized: false,
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000
+    secure: true,        // required when sameSite is 'none'
+    sameSite: 'none',    // required for cross-site cookies
+    httpOnly: true,
   }
-}))
-
+}));
 
 // Adding route-handling code to the request handling chain. This will define particular routes for the different parts of the site
 app.use('/', indexRouter)  // mounts indexRouter at the root of application. All routes defined in indexRouter will be relative to this path.
