@@ -14,6 +14,7 @@ async function getAllLevelsController(req, res) {
     res.json(levels)    // Return response (levels) as JSON
     
   } catch (error) {
+    console.error('getAllLevels error:', error)
     res.status(500).json({ error:'Failed to fetch levels' })
   }
 
